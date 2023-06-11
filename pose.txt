@@ -1,0 +1,169 @@
+#include "ModuleGamePose.h"
+#include "Viewer.h"
+#include "Status.h"
+#include "Gesture.h"
+#include "Tool.h"
+
+static const std::string VIEWER_MY_PICTOGRAM = "viewer_my_pictogram";
+static const std::string VIEWER_LEFT_PICTOGRAM = "viewer_left_pictogram";
+static const std::string VIEWER_RIGHT_PICTOGRAM = "viewer_right_pictogram";
+static const std::string VIEWER_STRIGHT_PICTOGRAM = "viewer_stright_pictogram";
+static const std::string STATUS_MONITOR = "status_monitor";
+static const std::string PICTOGRAM_TYPE = "pictogram_type";
+
+
+
+static const short ON = 1;
+static const short OFF = 0;
+
+RES PICTOGRAM_RES[ 3 ] = {
+	RES::PICTOGRAM_HANDS_UP,
+	RES::PICTOGRAM_HAND_LEFT_UP,
+	RES::PICTOGRAM_HAND_RIGHT_UP,
+};
+
+ModuleGamePose::ModuleGamePose( ) :
+	ModuleGame( MODULE::GAME_POSE ) {
+}
+
+ModuleGamePose::~ModuleGamePose( ) {
+}
+
+void ModuleGamePose::initializeGameStatus( StatusPtr status ) {
+	status->add( PICTOGRAM_TYPE + "0" );
+	status->add( PICTOGRAM_TYPE + "1" );
+	status->add( PICTOGRAM_TYPE + "2" );
+	status->add( PICTOGRAM_TYPE + "3" );
+
+	status->add( STATUS_MONITOR + "0" );
+
+	short type_bot0 = Tool::getRand( 3 );
+	status->setItem( PICTOGRAM_TYPE + "0", type_bot0 );
+	short type_bot1 = Tool::getRand( 3 );
+	status->setItem( PICTOGRAM_TYPE + "1", type_bot1 );
+	short type_bot2 = Tool::getRand( 3 );
+	status->setItem( PICTOGRAM_TYPE + "2", type_bot2 );
+	short type_bot3 = Tool::getRand( 3 );
+	status->setItem( PICTOGRAM_TYPE + "3", type_bot3 );
+
+
+
+}
+
+void ModuleGamePose::initializeGameViewer( ViewerPtr viewer ) {
+	MONITOR monitor = viewer->getMonitor( );
+	if ( monitor == MONITOR::BOT0 ) {
+		// bot1
+		viewer->add( VIEWER_LEFT_PICTOGRAM, RES::CIRCLE_SMALL, Vector2( -1.0, 0.0 ) );
+
+		// bot2
+		viewer->add( VIEWER_STRIGHT_PICTOGRAM, RES::CIRCLE_SMALL, Vector2( 0.0, 1.0 ) );
+
+		// bot3
+		viewer->add( VIEWER_RIGHT_PICTOGRAM, RES::CIRCLE_SMALL, Vector2( 1.0, 0.0 ) );
+
+	}
+	if ( monitor == MONITOR::BOT1 ) {
+		// bot2
+		viewer->add( VIEWER_LEFT_PICTOGRAM, RES::CIRCLE_SMALL, Vector2( -1.0, 0.0 ) );
+		// bot3
+		viewer->add( VIEWER_STRIGHT_PICTOGRAM, RES::CIRCLE_SMALL, Vector2( 0.0, 1.0 ) );
+		// bot0
+		viewer->add( VIEWER_RIGHT_PICTOGRAM, RES::CIRCLE_SMALL, Vector2( 1.0, 0.0 ) );
+		viewer->setAura( VIEWER_RIGHT_PICTOGRAM, AURA::ACTIVE );
+
+	}
+
+	if ( monitor == MONITOR::BOT2 ) {
+		// bot3
+		viewer->add( VIEWER_LEFT_PICTOGRAM, RES::CIRCLE_SMALL, Vector2( -1.0, 0.0 ) );
+		// bot0
+		viewer->add( VIEWER_STRIGHT_PICTOGRAM, RES::CIRCLE_SMALL, Vector2( 0.0, 1.0 ) );
+		viewer->setAura( VIEWER_STRIGHT_PICTOGRAM, AURA::ACTIVE );
+		// bot1
+		viewer->add( VIEWER_RIGHT_PICTOGRAM, RES::CIRCLE_SMALL, Vector2( 1.0, 0.0 ) );
+	}
+
+	if ( monitor == MONITOR::BOT3 ) {
+		// bot0
+		viewer->add( VIEWER_LEFT_PICTOGRAM, RES::CIRCLE_SMALL, Vector2( -1.0, 0.0 ) );
+		viewer->setAura( VIEWER_LEFT_PICTOGRAM, AURA::ACTIVE );
+		// bot1
+		viewer->add( VIEWER_STRIGHT_PICTOGRAM, RES::CIRCLE_SMALL, Vector2( 0.0, 1.0 ) );
+		// bot2
+		viewer->add( VIEWER_RIGHT_PICTOGRAM, RES::CIRCLE_SMALL, Vector2( 1.0, 0.0 ) );
+	}
+
+}
+
+void ModuleGamePose::updateGameStatus( StatusPtr status, GestureConstPtr gesture ) {
+	Vector2 left_pos = gesture->getPosLeft( 0 );
+	if ( left_pos.y > -1.1 ) {
+		status->setItem( STATUS_MONITOR + "0", ON );
+	}
+}
+
+void ModuleGamePose::updateGameViewer( StatusConstPtr status, ViewerPtr viewer ) {
+	std::string str_idx;
+	MONITOR monitor = viewer->getMonitor( );
+
+	switch ( monitor ) {
+	case MONITOR::EXTERIOR:
+	case MONITOR::BOT0:
+		str_idx = "0";
+		break;
+	case MONITOR::BOT1:
+		str_idx = "1";
+		break;
+	case MONITOR::BOT2:
+		str_idx = "2";
+		break;
+	case MONITOR::BOT3:
+		str_idx = "3";
+		break;
+	}
+
+	short type_bot0 = status->getItem( PICTOGRAM_TYPE + "0" );
+	short type_bot1 = status->getItem( PICTOGRAM_TYPE + "1" );
+	short type_bot2 = status->getItem( PICTOGRAM_TYPE + "2" );
+	short type_bot3 = status->getItem( PICTOGRAM_TYPE + "3" );
+	if ( monitor == MONITOR::BOT0 ) {
+		// bot1
+		viewer->setRes( VIEWER_LEFT_PICTOGRAM, PICTOGRAM_RES[ type_bot1 ] );
+		// bot2
+		viewer->setRes( VIEWER_STRIGHT_PICTOGRAM, PICTOGRAM_RES[ type_bot2 ] );
+		// bot3
+		viewer->setRes( VIEWER_RIGHT_PICTOGRAM, PICTOGRAM_RES[ type_bot3 ] );
+	}
+	if ( monitor == MONITOR::BOT1 ) {
+		// bot2
+		viewer->setRes( VIEWER_LEFT_PICTOGRAM, PICTOGRAM_RES[ type_bot2 ] );
+		// bot3
+		viewer->setRes( VIEWER_STRIGHT_PICTOGRAM, PICTOGRAM_RES[ type_bot3 ] );
+		// bot0
+		viewer->setRes( VIEWER_RIGHT_PICTOGRAM, PICTOGRAM_RES[ type_bot0 ] );
+	}
+
+	if ( monitor == MONITOR::BOT2 ) {
+		// bot3
+		viewer->setRes( VIEWER_LEFT_PICTOGRAM, PICTOGRAM_RES[ type_bot3 ] );
+		// bot0
+		viewer->setRes( VIEWER_STRIGHT_PICTOGRAM, PICTOGRAM_RES[ type_bot0 ] );
+		// bot1
+		viewer->setRes( VIEWER_RIGHT_PICTOGRAM, PICTOGRAM_RES[ type_bot1 ] );
+	}
+
+	if ( monitor == MONITOR::BOT3 ) {
+		// bot0
+		viewer->setRes( VIEWER_LEFT_PICTOGRAM, PICTOGRAM_RES[ type_bot0 ] );
+		// bot1
+		viewer->setRes( VIEWER_STRIGHT_PICTOGRAM, PICTOGRAM_RES[ type_bot1 ] );
+		// bot2
+		viewer->setRes( VIEWER_RIGHT_PICTOGRAM, PICTOGRAM_RES[ type_bot2 ] );
+	}
+
+
+
+
+}
+
